@@ -2,13 +2,18 @@
 
 ![Claude Code Orchestra](./summary.png)
 
-Multi-Agent AI Development Environment
+Multi-Agent AI Development Environment with Cost Optimization
+
+New in Feb 5, 2026: `claude-local` subagent integration (free local worker via Ollama).
 
 ```
-Claude Code (Orchestrator) ─┬─ Codex CLI (Deep Reasoning)
+Claude Code (Orchestrator) ─┬─ claude-local (FREE via Ollama) ← 基本実装はここ
+                            ├─ Codex CLI (Deep Reasoning)
                             ├─ Gemini CLI (Research)
                             └─ Subagents (Parallel Tasks)
 ```
+
+**コスト最適化**: 基本的なコーディングはclaude-local（無料）で、複雑なタスクのみAPI使用。
 
 ## Quick Start
 
@@ -40,6 +45,29 @@ codex login
 npm install -g @google/gemini-cli
 gemini login
 ```
+
+### claude-local (Ollama)
+
+`claude-local` is a free local worker for clear, mechanical tasks.
+
+1. Install Ollama
+2. Pull the model
+
+```bash
+ollama pull qwen3-coder-next
+```
+
+3. Ensure Ollama is running on `localhost:11434`
+4. Config is in `.ollama/config.json` (model + fallback)
+5. Agent definition is in `.claude/agents/claude-local.md`
+
+## claude-local Delegation Rules
+
+- Use for clear implementations, tests, docs, and mechanical refactors (free)
+- Escalate design/debug decisions to Codex
+- Escalate research to Gemini
+
+See `.claude/rules/claude-local-delegation.md` for the full decision tree.
 
 ## Architecture
 
@@ -123,6 +151,15 @@ gemini login
     ├── GEMINI.md
     └── settings.json
 ```
+
+## Directory Additions (claude-local)
+
+- `.claude/agents/claude-local.md`
+- `.claude/rules/claude-local-delegation.md`
+- `.claude/skills/claude-local-system/SKILL.md`
+- `.ollama/OLLAMA.md`
+- `.ollama/config.json`
+- `.ollama/skills/context-loader/SKILL.md`
 
 ## Skills
 
