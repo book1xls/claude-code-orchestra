@@ -2,8 +2,10 @@
 """
 UserPromptSubmit hook: Route to appropriate agent based on user intent.
 
-Analyzes user prompts and suggests the most appropriate agent
-(Codex for design/debug, Gemini for research/multimodal).
+Analyzes user prompts and suggests the most appropriate agent:
+- Codex for design/debug/reasoning
+- Gemini for research/multimodal
+- claude-local for basic implementation (free, via Ollama)
 """
 
 import json
@@ -49,22 +51,78 @@ GEMINI_TRIGGERS = {
     ],
 }
 
+# Triggers for claude-local (basic coding, clear specs, free via Ollama)
+CLAUDE_LOCAL_TRIGGERS = {
+    "ja": [
+        "実装して", "書いて", "作って",
+        "テストを追加", "テストを書いて",
+        "ドキュメント", "docstring",
+        "この通りに", "指示通りに",
+        "リネーム", "名前を変更",
+    ],
+    "en": [
+        "implement this", "write this", "create this",
+        "add tests", "write tests",
+        "add documentation", "docstrings",
+        "as specified", "as instructed",
+        "rename", "change name",
+    ],
+}
+
+# Indicators that task is too complex for claude-local
+COMPLEXITY_INDICATORS = {
+    "ja": [
+        "どう", "なぜ", "どちら", "比較", "選択",
+        "設計", "アーキテクチャ", "トレードオフ",
+        "調べ", "リサーチ", "最適",
+    ],
+    "en": [
+        "how should", "why", "which", "compare", "choose",
+        "design", "architecture", "trade-off",
+        "research", "investigate", "optimal", "best practice",
+    ],
+}
+
+
+def _has_complexity_indicators(prompt: str) -> bool:
+    """Check if prompt has indicators of complexity needing Codex/Gemini."""
+    prompt_lower = prompt.lower()
+    for triggers in COMPLEXITY_INDICATORS.values():
+        for trigger in triggers:
+            if trigger in prompt_lower:
+                return True
+    return False
+
 
 def detect_agent(prompt: str) -> tuple[str | None, str]:
-    """Detect which agent should handle this prompt."""
+    """Detect which agent should handle this prompt.
+
+    Priority order:
+    1. Codex (complex/design tasks) - highest priority
+    2. Gemini (research tasks) - medium priority
+    3. claude-local (basic implementation) - lowest priority, but free
+    """
     prompt_lower = prompt.lower()
 
-    # Check Codex triggers
+    # Check Codex triggers first (highest priority for complex tasks)
     for triggers in CODEX_TRIGGERS.values():
         for trigger in triggers:
             if trigger in prompt_lower:
                 return "codex", trigger
 
-    # Check Gemini triggers
+    # Check Gemini triggers (research has priority over basic implementation)
     for triggers in GEMINI_TRIGGERS.values():
         for trigger in triggers:
             if trigger in prompt_lower:
                 return "gemini", trigger
+
+    # Check claude-local triggers (basic implementation, free)
+    # Only if no complexity indicators present
+    if not _has_complexity_indicators(prompt_lower):
+        for triggers in CLAUDE_LOCAL_TRIGGERS.values():
+            for trigger in triggers:
+                if trigger in prompt_lower:
+                    return "claude-local", trigger
 
     return None, ""
 
@@ -103,6 +161,20 @@ def main():
                         "Gemini CLI's research capabilities. Consider: "
                         '`gemini -p "Research: {topic}" 2>/dev/null` '
                         "for documentation, library research, or multimodal content."
+                    )
+                }
+            }
+            print(json.dumps(output))
+
+        elif agent == "claude-local":
+            output = {
+                "hookSpecificOutput": {
+                    "hookEventName": "UserPromptSubmit",
+                    "additionalContext": (
+                        f"[Agent Routing] Detected '{trigger}' - this is a basic implementation task. "
+                        "Consider using claude-local (FREE via Ollama) with: "
+                        '`Task(subagent_type="claude-local", prompt="...")` '
+                        "for straightforward coding, tests, or documentation."
                     )
                 }
             }

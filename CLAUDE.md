@@ -8,13 +8,14 @@ Claude Code が Codex CLI（深い推論）と Gemini CLI（大規模リサー�
 
 ## Why This Exists
 
-| Agent | Strength | Use For |
-|-------|----------|---------|
-| **Claude Code** | オーケストレーション、ユーザー対話 | 全体統括、タスク管理 |
-| **Codex CLI** | 深い推論、設計判断、デバッグ | 設計相談、エラー分析、トレードオフ評価 |
-| **Gemini CLI** | 1Mトークン、マルチモーダル、Web検索 | コードベース全体分析、ライブラリ調査、PDF/動画処理 |
+| Agent | Strength | Use For | Cost |
+|-------|----------|---------|------|
+| **Claude Code** | オーケストレーション、ユーザー対話 | 全体統括、タスク管理 | API |
+| **claude-local** | 無制限ローカル実行（Ollama） | 基本実装、テスト、ドキュメント | **Free** |
+| **Codex CLI** | 深い推論、設計判断、デバッグ | 設計相談、エラー分析、トレードオフ評価 | API |
+| **Gemini CLI** | 1Mトークン、マルチモーダル、Web検索 | コードベース全体分析、ライブラリ調査、PDF/動画処理 | API |
 
-**IMPORTANT**: 単体では難しいタスクも、3エージェントの協調で解決できる。
+**IMPORTANT**: 基本的なコーディングは claude-local（無料）で、複雑なタスクのみ API を使う。
 
 ---
 
@@ -41,6 +42,19 @@ Bash("codex exec ... '1文で答えて'")
 ---
 
 ## Quick Reference
+
+### claude-local を使う時（FREE）
+
+- 明確な実装（「これを実装して」with 詳細仕様）
+- テスト作成（「テストを書いて」）
+- ドキュメント追加（「docstringを追加」）
+- 機械的リファクタ（「リネーム」「抽出」）
+
+→ 詳細: `.claude/rules/claude-local-delegation.md`
+
+```
+Task(subagent_type="claude-local", prompt="実装: ...")
+```
 
 ### Codex を使う時
 

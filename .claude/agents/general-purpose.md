@@ -170,3 +170,22 @@ Task: "Find all files related to {topic}"
 2. Summarize structure and key files
 3. Return concise overview
 ```
+
+## Cost Optimization: When to Recommend claude-local
+
+For basic tasks without design decisions, recommend using `claude-local` instead:
+
+| Task | Use claude-local? | Why |
+|------|-------------------|-----|
+| Clear implementation with spec | ✓ Yes | No design needed, save API cost |
+| Test writing | ✓ Yes | Follows patterns, save API cost |
+| Documentation | ✓ Yes | Mechanical work, save API cost |
+| Design decision | ✗ No | Needs Codex reasoning |
+| Research | ✗ No | Needs Gemini web access |
+
+**Suggest to orchestrator:**
+"This task can be handled by claude-local (free via Ollama) instead of API agents."
+
+```
+Task(subagent_type="claude-local", prompt="Implement: ...")
+```
